@@ -129,7 +129,9 @@ JWT_SECRET_KEY=替换为随机密钥
 | 组件 | 平台 | 说明 |
 |------|------|------|
 | 前端 | [Vercel](https://vercel.com) | 全球 CDN，免费，速度快 |
-| 后端 | [Render](https://render.com) | 免费套餐，支持持久化存储 |
+| 后端 | [Render](https://render.com) | 免费套餐，有冷启动延迟，数据重启重置 |
+
+> ⚠️ Render 免费套餐不支持持久化磁盘，每次重新部署后 SQLite 数据和上传图片会重置。学习演示完全够用。
 
 详细步骤请参考 [部署指南](docs/deployment.md)。
 
@@ -141,8 +143,8 @@ git init && git add . && git commit -m "deploy"
 git remote add origin https://github.com/你的用户名/你的仓库.git
 git push -u origin main
 
-# 2. 在 Render 创建 Web Service，配置环境变量和持久化磁盘
-# 3. 在 Vercel 导入项目，设置 VITE_API_BASE_URL 为 Render 后端 URL
+# 2. 在 Render 创建 Web Service，Root Directory 填 backend，配置环境变量
+# 3. 在 Vercel 导入项目，Root Directory 填 frontend，设置 VITE_API_BASE_URL
 ```
 
 ## License

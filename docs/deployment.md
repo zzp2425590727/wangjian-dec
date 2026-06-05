@@ -1,14 +1,14 @@
 # 部署指南
 
-本指南帮助你将物体识别系统部署到免费云服务器：
+本指南帮助你将物体识别系统部署到免费云平台：
 - **前端** → Vercel（免费，全球 CDN）
-- **后端** → Render（免费套餐，支持持久化存储）
+- **后端** → Render（免费套餐，支持 Python）
 
 ---
 
 ## 前置准备
 
-1. 注册 [GitHub](https://github.com) 账号（或 [Gitee](https://gitee.com)）
+1. 注册 [GitHub](https://github.com) 账号
 2. 注册 [Vercel](https://vercel.com) 账号（可用 GitHub 登录）
 3. 注册 [Render](https://render.com) 账号（可用 GitHub 登录）
 
@@ -16,20 +16,20 @@
 
 ## 第一步：将代码推送到 GitHub
 
-### 1.1 初始化 Git 仓库
+### 1.1 在 GitHub 创建仓库
+
+1. 打开 https://github.com/new
+2. Repository name 填 `object-detection-system`
+3. 选择 **Public**（免费用户私有仓库有限制）
+4. 点击 **Create repository**
+
+### 1.2 推送代码
 
 ```bash
 cd wangjian-dec
 git init
 git add .
 git commit -m "Initial commit"
-```
-
-### 1.2 创建 GitHub 仓库并推送
-
-在 GitHub 上创建一个新仓库（如 `object-detection-system`），然后：
-
-```bash
 git remote add origin https://github.com/你的用户名/object-detection-system.git
 git branch -M main
 git push -u origin main
@@ -42,71 +42,75 @@ git push -u origin main
 ### 2.1 创建 Web Service
 
 1. 登录 [Render Dashboard](https://dashboard.render.com)
-2. 点击 **New** → **Web Service**
-3. 选择 **Build and deploy from a Git repository**
-4. 连接你的 GitHub 仓库
+2. 点击右上角 **+ New** 按钮
+3. 选择 **Web Service**
 
-### 2.2 配置构建选项
+![步骤示意]
 
-| 配置项 | 值 |
-|--------|-----|
-| **Name** | `object-detection-backend` |
-| **Region** | Singapore（离国内最近） |
-| **Branch** | `main` |
-| **Root Directory** | `backend` |
-| **Runtime** | Python 3 |
-| **Build Command** | `pip install -r requirements.txt` |
-| **Start Command** | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
-| **Instance Type** | Free |
+```
++ New  ──→  Web Service  ──→  Connect your GitHub repo
+```
 
-### 2.3 添加持久化磁盘
+### 2.2 连接 GitHub 仓库
 
-Render 免费套餐的文件系统是临时的（重启会丢失数据）。需要添加磁盘：
+1. 选择 **Build and deploy from a Git repository**
+2. 点击 **Next**
+3. 找到你刚才创建的仓库 `object-detection-system`
+4. 点击 **Connect**
 
-1. 在 Web Service 设置页面，找到 **Disks** 部分
-2. 点击 **Add Disk**
-3. 配置：
-   - **Name**: `data-disk`
-   - **Mount Path**: `/opt/render/project/src/data`
-   - **Size**: 1 GB（免费最大）
-4. 保存
+### 2.3 配置 Web Service
 
-### 2.4 配置环境变量
+在配置页面填写以下信息：
 
-在 Render 的 **Environment** 页面添加以下变量：
+| 配置项 | 填写内容 | 备注 |
+|--------|---------|------|
+| **Name** | `object-detection-backend` | 自定义名称 |
+| **Region** | `Singapore (Southeast Asia)` | 离国内最近 |
+| **Branch** | `main` | |
+| **Root Directory** | `backend` | ⚠️ 必须填 |
+| **Runtime** | `Python 3` | |
+| **Build Command** | `pip install -r requirements.txt` | |
+| **Start Command** | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` | |
+| **Instance Type** | `Free` | 选择免费套餐 |
 
-| Key | Value | 说明 |
+### 2.4 配置环境变量（重要）
+
+在同一个页面往下滚，找到 **Environment Variables** 部分，点击 **Add Environment Variable**，逐个添加：
+
+| Key | Value | 备注 |
 |-----|-------|------|
-| `APP_ENV` | `production` | 运行环境 |
-| `DATABASE_URL` | `sqlite:///./data/app.db` | 数据库路径 |
-| `UPLOAD_DIR` | `./data/uploads` | 上传文件目录 |
-| `JWT_SECRET_KEY` | （点 Generate 生成随机值） | JWT 密钥 |
-| `JWT_EXPIRE_HOURS` | `24` | Token 过期时间 |
-| `BAIDU_API_KEY` | 你的百度 API Key | 百度 API 密钥 |
-| `BAIDU_SECRET_KEY` | 你的百度 Secret Key | 百度 Secret 密钥 |
-| `BAIDU_TOKEN_URL` | `https://aip.baidubce.com/oauth/2.0/token` | 百度 Token 地址 |
-| `BAIDU_DETECT_URL` | `https://aip.baidubce.com/rest/2.0/image-classify/v2/advanced_general` | 百度识别地址 |
-| `BAIDU_API_TIMEOUT_SECONDS` | `30` | API 超时时间 |
-| `MAX_IMAGE_SIZE_MB` | `10` | 最大上传大小 |
+| `APP_ENV` | `production` | |
+| `DATABASE_URL` | `sqlite:///./data/app.db` | |
+| `UPLOAD_DIR` | `./data/uploads` | |
+| `JWT_SECRET_KEY` | 点右侧 **Generate** 按钮自动生成 | |
+| `JWT_EXPIRE_HOURS` | `24` | |
+| `BAIDU_API_KEY` | 你的百度 API Key | |
+| `BAIDU_SECRET_KEY` | 你的百度 Secret Key | |
+| `BAIDU_TOKEN_URL` | `https://aip.baidubce.com/oauth/2.0/token` | |
+| `BAIDU_DETECT_URL` | `https://aip.baidubce.com/rest/2.0/image-classify/v2/advanced_general` | |
+| `BAIDU_API_TIMEOUT_SECONDS` | `30` | |
+| `MAX_IMAGE_SIZE_MB` | `10` | |
+| `ALLOWED_ORIGINS` | `https://你的Vercel域名.vercel.app,http://localhost:5173` | 后面再填 |
 
-### 2.5 部署
+### 2.5 点击 Deploy
 
-点击 **Create Web Service**，Render 会自动构建和部署。
+点击页面底部的 **Create Web Service** 按钮。
 
-部署完成后，你会得到一个 URL，类似：
+Render 会开始构建和部署，大约需要 2-5 分钟。可以在 **Logs** 标签页查看进度。
+
+部署成功后，页面顶部会显示你的后端 URL，类似：
 ```
 https://object-detection-backend.onrender.com
 ```
 
-> ⚠️ **注意**：Render 免费套餐有冷启动延迟（约 30-60 秒无请求后休眠），首次访问会较慢。
-
 ### 2.6 验证后端
 
-访问以下 URL 确认后端正常：
+在浏览器访问这个 URL，应该看到：
+```json
+{"message":"Simple Object Detection System API","version":"1.0.0"}
 ```
-https://object-detection-backend.onrender.com/
-```
-应该返回：`{"message":"Simple Object Detection System API","version":"1.0.0"}`
+
+> ⚠️ **关于数据持久化**：Render 免费套餐的文件系统是临时的，每次重新部署或 Service 休眠唤醒后，SQLite 数据库和上传的图片会被重置。对于学习和演示完全够用。如需持久化存储，需升级到付费套餐（$7/月起）并添加 Persistent Disk。
 
 ---
 
@@ -116,87 +120,99 @@ https://object-detection-backend.onrender.com/
 
 1. 登录 [Vercel Dashboard](https://vercel.com/dashboard)
 2. 点击 **Add New...** → **Project**
-3. 选择你的 GitHub 仓库
-4. 点击 **Import**
+3. 找到你的 GitHub 仓库，点击 **Import**
 
-### 3.2 配置构建选项
+### 3.2 配置项目
 
-| 配置项 | 值 |
-|--------|-----|
-| **Framework Preset** | Vite |
-| **Root Directory** | `frontend` |
-| **Build Command** | `npm run build` |
-| **Output Directory** | `dist` |
+| 配置项 | 填写内容 |
+|--------|---------|
+| **Framework Preset** | Vite（通常自动识别） |
+| **Root Directory** | 点 **Edit**，改为 `frontend` |
+| **Build Command** | `npm run build`（默认即可） |
+| **Output Directory** | `dist`（默认即可） |
 
 ### 3.3 配置环境变量
 
-在 **Environment Variables** 中添加：
+展开 **Environment Variables** 部分，添加：
 
 | Key | Value |
 |-----|-------|
 | `VITE_API_BASE_URL` | `https://object-detection-backend.onrender.com` |
 
-> 将上面的 URL 替换为你实际的 Render 后端地址。
+> ⚠️ 把上面的 URL 替换为你第二步中实际获得的 Render 后端地址！
 
-### 3.4 部署
+### 3.4 点击 Deploy
 
-点击 **Deploy**，Vercel 会自动构建和部署。
+Vercel 会自动构建和部署，大约 1-2 分钟。
 
-部署完成后，你会得到一个 URL，类似：
+部署成功后会显示你的前端 URL，类似：
 ```
 https://object-detection-system.vercel.app
 ```
 
 ---
 
-## 第四步：测试
+## 第四步：配置 CORS（让前后端互通）
 
-1. 打开 Vercel 前端 URL
-2. 使用测试账号 `demo` / `123456` 登录
-3. 上传一张图片进行识别
+前端在 `xxx.vercel.app`，后端在 `xxx.onrender.com`，域名不同，需要配置 CORS。
+
+### 方法：在 Render 环境变量中添加
+
+回到 Render Dashboard → 你的 Web Service → **Environment** 标签页：
+
+1. 找到 `ALLOWED_ORIGINS` 这个环境变量
+2. 把值改为你的实际 Vercel 域名：
+   ```
+   https://object-detection-system.vercel.app,http://localhost:5173
+   ```
+3. 保存后 Render 会自动重新部署
+
+---
+
+## 第五步：测试
+
+1. 打开你的 Vercel 前端 URL
+2. 用 `demo` / `123456` 登录
+3. 上传一张图片
 4. 查看识别结果
 
 ---
 
-## 配置 CORS（重要）
+## 完整流程图
 
-部署后，前端和后端在不同域名下，需要确保后端 CORS 配置允许你的 Vercel 域名。
-
-修改 `backend/app/main.py`：
-
-```python
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "https://你的域名.vercel.app",  # ← 添加这一行
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 ```
-
-或者更灵活地通过环境变量配置：
-
-```python
-import os
-
-ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
-
-然后在 Render 环境变量中添加：
-```
-ALLOWED_ORIGINS=https://你的域名.vercel.app,http://localhost:5173
+┌──────────────────────────────────────────────────────┐
+│  1. 推送代码到 GitHub                                  │
+│     git push → github.com/你的仓库                      │
+└──────────────┬───────────────────────────────────────┘
+               │
+       ┌───────┴───────┐
+       ▼               ▼
+┌─────────────┐  ┌─────────────┐
+│  2. Render   │  │  3. Vercel   │
+│  部署后端     │  │  部署前端     │
+│             │  │             │
+│  连接仓库    │  │  连接仓库    │
+│  设 Root Dir │  │  设 Root Dir │
+│  = backend  │  │  = frontend │
+│  配置环境变量 │  │  设 API URL  │
+│  Deploy!    │  │  Deploy!    │
+│             │  │             │
+│  得到 URL:   │  │  得到 URL:   │
+│  xxx.onrender│  │  xxx.vercel │
+└──────┬──────┘  └──────┬──────┘
+       │                │
+       │  4. 配置 CORS    │
+       │  ALLOWED_ORIGINS │
+       │  = Vercel URL    │
+       │                │
+       └───────┬────────┘
+               ▼
+       ┌──────────────┐
+       │   5. 测试      │
+       │  打开 Vercel   │
+       │  URL 登录使用   │
+       └──────────────┘
 ```
 
 ---
@@ -205,68 +221,46 @@ ALLOWED_ORIGINS=https://你的域名.vercel.app,http://localhost:5173
 
 ### Q: Render 后端首次访问很慢？
 
-Render 免费套餐在无请求 15 分钟后会休眠，首次唤醒需要 30-60 秒。这是正常现象。可以使用 UptimeRobot 等免费服务定期 ping 来保持活跃。
+Render 免费套餐在无请求约 15 分钟后会休眠。首次唤醒需要 30-60 秒，这是正常的。可以用 [UptimeRobot](https://uptimerobot.com)（免费）每 5 分钟 ping 一次来保持活跃。
 
-### Q: 上传图片后识别失败？
+### Q: 为什么重新部署后数据没了？
 
-检查 Render 的 **Logs** 页面查看错误日志。常见原因：
-- 百度 API Key/Secret Key 配置错误
-- 百度 API 调用次数用尽
-- 网络超时（可增大 `BAIDU_API_TIMEOUT_SECONDS`）
+Render 免费套餐不支持持久化磁盘。每次重新部署，SQLite 数据库和上传的图片会被重置。这是免费方案的限制。解决方案：
+- 学习演示：够用，无需处理
+- 正式使用：升级 Render 付费套餐 + 添加 Persistent Disk，或改用外部数据库
 
 ### Q: 前端显示网络错误？
 
-确认 `VITE_API_BASE_URL` 环境变量是否正确设置为 Render 后端 URL。修改环境变量后需要在 Vercel 重新部署。
+1. 确认 `VITE_API_BASE_URL` 是否正确（不要有末尾 `/`）
+2. 确认 `ALLOWED_ORIGINS` 是否包含你的 Vercel 域名
+3. 在浏览器按 F12 打开开发者工具，看 Console 和 Network 标签页的错误信息
 
-### Q: 数据会丢失吗？
+### Q: 登录后提示 401？
 
-只要持久化磁盘正常挂载，SQLite 数据库和上传的图片在 Render 重启后不会丢失。但如果删除并重新创建 Service，磁盘数据会丢失。
+JWT_SECRET_KEY 在每次 Render 重新部署时可能变化（如果你用了 generateValue）。确保前后端的 token 机制一致。
 
-### Q: 如何更新部署？
+### Q: 上传图片后识别失败？
 
-推送代码到 GitHub 后，Render 和 Vercel 会自动检测并重新部署。
+在 Render 的 **Logs** 标签页查看错误日志。常见原因：
+- 百度 API Key 或 Secret Key 填写错误
+- 百度 API 调用次数用尽
+- 超时（可增大 `BAIDU_API_TIMEOUT_SECONDS`）
+
+### Q: 如何更新代码？
 
 ```bash
 git add .
-git commit -m "Update something"
+git commit -m "update"
 git push
 ```
 
----
-
-## 本地开发 vs 生产环境
-
-| 配置 | 本地开发 | 生产环境（Render） |
-|------|---------|-------------------|
-| `DATABASE_URL` | `sqlite:///./data/app.db` | `sqlite:///./data/app.db` |
-| `UPLOAD_DIR` | `./data/uploads` | `./data/uploads` |
-| `JWT_SECRET_KEY` | `replace-with-random-secret` | 随机生成的安全密钥 |
-| `APP_ENV` | `development` | `production` |
-| `VITE_API_BASE_URL` | `http://localhost:8000` | `https://xxx.onrender.com` |
+Render 和 Vercel 会自动检测并重新部署。
 
 ---
 
-## 部署架构图
+## 免费方案对比
 
-```
-┌─────────────────┐         ┌─────────────────────┐
-│   用户浏览器      │         │   百度 AI 开放平台    │
-│                  │         │                     │
-│  Vercel CDN      │  REST   │  图像识别 API        │
-│  (Vue 前端)      │ ◄─────► │                     │
-│                  │  API    │                     │
-└────────┬─────────┘         └──────────┬──────────┘
-         │                              │
-         │ HTTPS                        │ HTTPS
-         │                              │
-         ▼                              │
-┌─────────────────┐                     │
-│   Render 免费    │                     │
-│   (FastAPI)      │ ◄──────────────────┘
-│                  │
-│  ┌────────────┐  │
-│  │ 持久化磁盘  │  │  ← SQLite + 上传图片
-│  │  data/     │  │
-│  └────────────┘  │
-└──────────────────┘
-```
+| 平台 | 用途 | 免费额度 | 限制 |
+|------|------|---------|------|
+| **Vercel** | 前端静态站点 | 无限 | 无明显限制 |
+| **Render** | 后端 API | 750 小时/月 | 冷启动延迟，无持久化 |
